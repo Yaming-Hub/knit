@@ -346,11 +346,9 @@ fn extract_data_json_strings(
                 mapper.register(s);
             }
         }
-        serde_json::Value::Number(n) => {
-            if should_tokenize && config.tokenize_numbers {
-                let s = n.to_string();
-                mapper.register(&s);
-            }
+        serde_json::Value::Number(n) if should_tokenize && config.tokenize_numbers => {
+            let s = n.to_string();
+            mapper.register(&s);
         }
         serde_json::Value::Object(map) => {
             for (key, val) in map {

@@ -279,15 +279,13 @@ pub fn detect_tuple_columns(
             .iter()
             .filter_map(|name| {
                 string_cols.get(name).map(|vals| {
-                    let distinct: std::collections::HashSet<&str> = vals
-                        .iter()
-                        .filter_map(|v| v.as_deref())
-                        .collect();
+                    let distinct: std::collections::HashSet<&str> =
+                        vals.iter().filter_map(|v| v.as_deref()).collect();
                     (name.clone(), distinct.len())
                 })
             })
             .collect();
-        col_cards.sort_by(|a, b| b.1.cmp(&a.1));
+        col_cards.sort_by_key(|(_, cardinality)| std::cmp::Reverse(*cardinality));
 
         if col_cards.is_empty() {
             continue;
@@ -302,8 +300,10 @@ pub fn detect_tuple_columns(
         for (col, _) in &col_cards[1..] {
             let col_vals = &string_cols[col];
             let mut p_to_s: HashMap<&str, std::collections::HashSet<&str>> = HashMap::new();
-            for idx in 0..n.min(col_vals.len()) {
-                if let (Some(pv), Some(sv)) = (&string_cols[primary][idx], &col_vals[idx]) {
+            for (primary_value, secondary_value) in
+                string_cols[primary].iter().zip(col_vals.iter()).take(n)
+            {
+                if let (Some(pv), Some(sv)) = (primary_value, secondary_value) {
                     p_to_s.entry(pv.as_str()).or_default().insert(sv.as_str());
                 }
             }
@@ -334,9 +334,9 @@ pub fn detect_tuple_columns(
         let mut seen = std::collections::HashSet::new();
         let mut tuples = Vec::new();
 
-        for idx in 0..n {
+        for (idx, primary_value) in string_cols[primary].iter().enumerate().take(n) {
             // Get primary value
-            let pv = match &string_cols[primary][idx] {
+            let pv = match primary_value {
                 Some(v) => v.clone(),
                 None => continue,
             };
@@ -481,16 +481,12 @@ pub fn detect_derived_text_columns(
                         (a_vals, b_vals, &str_names[i], &str_names[j]),
                         (b_vals, a_vals, &str_names[j], &str_names[i]),
                     ] {
-                        let matches = count_concat_matches(
-                            target_vals, first, second, sep, n,
-                        );
+                        let matches = count_concat_matches(target_vals, first, second, sep, n);
                         if matches as f64 / n as f64 >= 0.9 {
                             let expr = if sep.is_empty() {
                                 format!("${{{first_name}}}${{{second_name}}}")
                             } else {
-                                format!(
-                                    "${{{first_name}}}{sep}${{{second_name}}}",
-                                )
+                                format!("${{{first_name}}}{sep}${{{second_name}}}",)
                             };
                             debug!(
                                 target = %target_name, expr = %expr,
@@ -500,10 +496,7 @@ pub fn detect_derived_text_columns(
                             results.push(DerivedTextRelation {
                                 target: target_name.clone(),
                                 expr,
-                                sources: vec![
-                                    first_name.clone(),
-                                    second_name.clone(),
-                                ],
+                                sources: vec![first_name.clone(), second_name.clone()],
                             });
                             // Found a match for this target — skip remaining patterns
                             break;
@@ -648,9 +641,19 @@ pub fn detect_grid_structures(
             // Assign outer (fewer unique values) vs inner (more)
             let a_is_outer = a_paired.len() <= b_paired.len();
             let (outer, outer_vals, inner, inner_vals) = if a_is_outer {
-                (str_names[i].clone(), a_paired, str_names[j].clone(), b_paired)
+                (
+                    str_names[i].clone(),
+                    a_paired,
+                    str_names[j].clone(),
+                    b_paired,
+                )
             } else {
-                (str_names[j].clone(), b_paired, str_names[i].clone(), a_paired)
+                (
+                    str_names[j].clone(),
+                    b_paired,
+                    str_names[i].clone(),
+                    a_paired,
+                )
             };
 
             debug!(
@@ -736,10 +739,8 @@ pub fn detect_conditional_distributions(
     // For each (categorical, numeric) pair
     for (cat_name, cat_vals) in &string_cols {
         // Skip high-cardinality categoricals (>50 unique values)
-        let unique_cats: std::collections::HashSet<&str> = cat_vals
-            .iter()
-            .filter_map(|v| v.as_deref())
-            .collect();
+        let unique_cats: std::collections::HashSet<&str> =
+            cat_vals.iter().filter_map(|v| v.as_deref()).collect();
         if unique_cats.len() > 50 || unique_cats.len() < 2 {
             continue;
         }
@@ -801,8 +802,7 @@ pub fn detect_conditional_distributions(
             let mut branches = Vec::new();
             let all_finite: Vec<f64> = num_vals.iter().filter(|v| v.is_finite()).copied().collect();
             // True overall mean (weighted by actual values, not group means)
-            let true_overall_mean =
-                all_finite.iter().sum::<f64>() / all_finite.len().max(1) as f64;
+            let true_overall_mean = all_finite.iter().sum::<f64>() / all_finite.len().max(1) as f64;
             let is_integer = all_finite.iter().all(|v| (*v - v.round()).abs() < 1e-9);
 
             for (cat, vals) in &valid_groups {
@@ -824,10 +824,7 @@ pub fn detect_conditional_distributions(
                 .map(|f| f.best.distribution.clone())
                 .unwrap_or_else(|| {
                     let mean = all_finite.iter().sum::<f64>() / all_finite.len() as f64;
-                    let std = (all_finite
-                        .iter()
-                        .map(|v| (v - mean).powi(2))
-                        .sum::<f64>()
+                    let std = (all_finite.iter().map(|v| (v - mean).powi(2)).sum::<f64>()
                         / all_finite.len() as f64)
                         .sqrt();
                     Distribution::Normal(mean, std.max(0.01))
@@ -1380,7 +1377,10 @@ mod tests {
         let r = ranks(&vals);
         // All tied → average rank = (1+2+3+4+5)/5 = 3.0
         for rank in &r {
-            assert!((rank - 3.0).abs() < 0.01, "all tied should be 3.0, got {rank}");
+            assert!(
+                (rank - 3.0).abs() < 0.01,
+                "all tied should be 3.0, got {rank}"
+            );
         }
     }
 
@@ -1402,10 +1402,7 @@ mod tests {
     #[test]
     fn p_value_zero_correlation() {
         let p = pearson_p_value(0.0, 100);
-        assert!(
-            (p - 1.0).abs() < 0.1,
-            "r=0 with large n → p≈1.0, got {p}"
-        );
+        assert!((p - 1.0).abs() < 0.1, "r=0 with large n → p≈1.0, got {p}");
     }
 
     #[test]
@@ -1430,7 +1427,10 @@ mod tests {
     fn p_value_large_df_uses_normal() {
         // df > 30 triggers normal approximation path
         let p = pearson_p_value(0.5, 100);
-        assert!(p < 0.001, "r=0.5 at n=100 should be very significant, got {p}");
+        assert!(
+            p < 0.001,
+            "r=0.5 at n=100 should be very significant, got {p}"
+        );
     }
 
     // ─── normal_cdf ─────────────────────────────────────────────────────
@@ -1438,10 +1438,7 @@ mod tests {
     #[test]
     fn normal_cdf_symmetry() {
         let mid = normal_cdf(0.0);
-        assert!(
-            (mid - 0.5).abs() < 0.001,
-            "Φ(0) should be 0.5, got {mid}"
-        );
+        assert!((mid - 0.5).abs() < 0.001, "Φ(0) should be 0.5, got {mid}");
     }
 
     #[test]
@@ -1450,10 +1447,7 @@ mod tests {
         let right = normal_cdf(3.0);
         assert!(left < 0.01, "Φ(-3) should be small, got {left}");
         assert!(right > 0.99, "Φ(3) should be near 1, got {right}");
-        assert!(
-            (left + right - 1.0).abs() < 0.001,
-            "Φ(-3) + Φ(3) ≈ 1"
-        );
+        assert!((left + right - 1.0).abs() < 0.001, "Φ(-3) + Φ(3) ≈ 1");
     }
 
     // ─── paired_finite ──────────────────────────────────────────────────
@@ -1535,12 +1529,8 @@ mod tests {
     fn detect_correlations_skips_weak_numeric() {
         // Two uncorrelated columns — should produce no results at all
         let n = 200;
-        let x: Vec<f64> = (0..n)
-            .map(|i| (i as f64 * 0.1).sin())
-            .collect();
-        let y: Vec<f64> = (0..n)
-            .map(|i| (i as f64 * 0.1).cos())
-            .collect();
+        let x: Vec<f64> = (0..n).map(|i| (i as f64 * 0.1).sin()).collect();
+        let y: Vec<f64> = (0..n).map(|i| (i as f64 * 0.1).cos()).collect();
         let batch = numeric_batch(&[("x", x), ("y", y)]);
         let profiles = vec![numeric_profile("x"), numeric_profile("y")];
 
@@ -1593,16 +1583,48 @@ mod tests {
         // Mix of null and non-null rows — only 3 non-null pairs remain
         // (fewer than 5), so no correlation should be detected
         let a: Vec<Option<&str>> = vec![
-            Some("A"), None, Some("B"), None, Some("A"),
-            None, None, None, None, None,
-            None, None, None, None, None,
-            None, None, None, None, None,
+            Some("A"),
+            None,
+            Some("B"),
+            None,
+            Some("A"),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
         ];
         let b: Vec<Option<&str>> = vec![
-            Some("X"), Some("Y"), Some("Y"), Some("X"), Some("X"),
-            Some("Y"), Some("X"), Some("Y"), Some("X"), Some("Y"),
-            Some("X"), Some("Y"), Some("X"), Some("Y"), Some("X"),
-            Some("Y"), Some("X"), Some("Y"), Some("X"), Some("Y"),
+            Some("X"),
+            Some("Y"),
+            Some("Y"),
+            Some("X"),
+            Some("X"),
+            Some("Y"),
+            Some("X"),
+            Some("Y"),
+            Some("X"),
+            Some("Y"),
+            Some("X"),
+            Some("Y"),
+            Some("X"),
+            Some("Y"),
+            Some("X"),
+            Some("Y"),
+            Some("X"),
+            Some("Y"),
+            Some("X"),
+            Some("Y"),
         ];
         let batch = string_batch(&[("cat_a", a), ("cat_b", b)]);
         let profiles = vec![string_profile("cat_a"), string_profile("cat_b")];
@@ -1662,8 +1684,7 @@ mod tests {
         let ab: Vec<_> = results
             .iter()
             .filter(|c| {
-                (c.column_a == "a" && c.column_b == "b")
-                    || (c.column_a == "b" && c.column_b == "a")
+                (c.column_a == "a" && c.column_b == "b") || (c.column_a == "b" && c.column_b == "a")
             })
             .collect();
         assert!(!ab.is_empty(), "should detect a↔b correlation");
@@ -1785,16 +1806,14 @@ mod tests {
     #[test]
     fn derived_text_detects_concat() {
         let n = 20;
-        let first: Vec<Option<&str>> = (0..n).map(|i| Some(if i % 2 == 0 { "Alice" } else { "Bob" })).collect();
-        let last: Vec<Option<&str>> = (0..n).map(|i| Some(if i % 3 == 0 { "Smith" } else { "Jones" })).collect();
+        let first: Vec<Option<&str>> = (0..n)
+            .map(|i| Some(if i % 2 == 0 { "Alice" } else { "Bob" }))
+            .collect();
+        let last: Vec<Option<&str>> = (0..n)
+            .map(|i| Some(if i % 3 == 0 { "Smith" } else { "Jones" }))
+            .collect();
         let full: Vec<Option<String>> = (0..n)
-            .map(|i| {
-                Some(format!(
-                    "{} {}",
-                    first[i].unwrap(),
-                    last[i].unwrap()
-                ))
-            })
+            .map(|i| Some(format!("{} {}", first[i].unwrap(), last[i].unwrap())))
             .collect();
         let full_refs: Vec<Option<&str>> = full.iter().map(|v| v.as_deref()).collect();
 
@@ -1819,7 +1838,10 @@ mod tests {
             string_profile("full_name"),
         ];
         let result = detect_derived_text_columns(&profiles, &[batch]);
-        assert!(!result.is_empty(), "should detect full_name = first + ' ' + last");
+        assert!(
+            !result.is_empty(),
+            "should detect full_name = first + ' ' + last"
+        );
         let rel = &result[0];
         assert_eq!(rel.target, "full_name");
         assert!(rel.expr.contains("first"));

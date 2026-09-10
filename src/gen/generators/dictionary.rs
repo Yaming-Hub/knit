@@ -54,8 +54,6 @@ pub struct DictionaryGenerator {
     expansion: ExpansionStrategy,
     /// For combinatorial: tokenized word lists per position.
     token_pools: Option<Vec<Vec<String>>>,
-    /// For shuffle: pre-shuffled index permutation.
-    shuffle_order: Option<Vec<usize>>,
 }
 
 impl DictionaryGenerator {
@@ -71,7 +69,6 @@ impl DictionaryGenerator {
             entries,
             expansion: strategy,
             token_pools,
-            shuffle_order: None,
         }
     }
 
@@ -131,32 +128,33 @@ impl DictionaryGenerator {
 
 impl FieldGenerator for DictionaryGenerator {
     fn generate(&self, rng: &mut dyn Rng, count: usize, _ctx: &GenContext) -> ArrayRef {
-        let values: Vec<String> = if self.expansion == ExpansionStrategy::Shuffle && !self.entries.is_empty() {
-            // Fisher-Yates shuffle: emit each entry exactly once per cycle,
-            // reshuffling at the start of each new cycle.
-            let n = self.entries.len();
-            let mut indices: Vec<usize> = (0..n).collect();
-            // Initial shuffle
-            for i in (1..n).rev() {
-                let j = rng.next_u32() as usize % (i + 1);
-                indices.swap(i, j);
-            }
-            let mut results = Vec::with_capacity(count);
-            for i in 0..count {
-                if i > 0 && i % n == 0 {
-                    // Reshuffle for the next cycle
-                    for k in (1..n).rev() {
-                        let j = rng.next_u32() as usize % (k + 1);
-                        indices.swap(k, j);
-                    }
+        let values: Vec<String> =
+            if self.expansion == ExpansionStrategy::Shuffle && !self.entries.is_empty() {
+                // Fisher-Yates shuffle: emit each entry exactly once per cycle,
+                // reshuffling at the start of each new cycle.
+                let n = self.entries.len();
+                let mut indices: Vec<usize> = (0..n).collect();
+                // Initial shuffle
+                for i in (1..n).rev() {
+                    let j = rng.next_u32() as usize % (i + 1);
+                    indices.swap(i, j);
                 }
-                let idx = indices[i % n];
-                results.push(self.entries[idx].clone());
-            }
-            results
-        } else {
-            (0..count).map(|i| self.generate_one(rng, i)).collect()
-        };
+                let mut results = Vec::with_capacity(count);
+                for i in 0..count {
+                    if i > 0 && i % n == 0 {
+                        // Reshuffle for the next cycle
+                        for k in (1..n).rev() {
+                            let j = rng.next_u32() as usize % (k + 1);
+                            indices.swap(k, j);
+                        }
+                    }
+                    let idx = indices[i % n];
+                    results.push(self.entries[idx].clone());
+                }
+                results
+            } else {
+                (0..count).map(|i| self.generate_one(rng, i)).collect()
+            };
         Arc::new(StringArray::from(
             values.iter().map(|s| s.as_str()).collect::<Vec<_>>(),
         ))

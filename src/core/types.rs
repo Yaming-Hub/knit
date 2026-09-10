@@ -450,6 +450,7 @@ impl DataModel {
     ///
     /// Constraints from the [`RelationshipModel`] are distributed to their
     /// respective entities by matching the `table` field.
+    #[allow(clippy::too_many_arguments)]
     pub fn from_layers(
         meta: ModelMeta,
         mut entities: Vec<Entity>,
@@ -548,7 +549,7 @@ pub struct Mixin {
 ///
 /// Each table produces one output file/table with `count` rows and the
 /// specified columns. Constraints and topology are optional refinements.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 pub struct Table {
     /// Unique table name, used as the table/file name in output.
     pub name: String,
@@ -606,28 +607,6 @@ pub struct Table {
     /// generated data preserves the same ordering as the source.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sort_by: Option<SortOrder>,
-}
-
-impl Default for Table {
-    fn default() -> Self {
-        Self {
-            name: String::new(),
-            description: None,
-            tags: Vec::new(),
-            count: CountSpec::default(),
-            fields: Vec::new(),
-            constraints: Vec::new(),
-            topology: None,
-            actor: false,
-            persona_distribution: None,
-            activity_count: None,
-            mixin_refs: None,
-            output: None,
-            stats: None,
-            scaling: None,
-            sort_by: None,
-        }
-    }
 }
 
 /// Sort order specification detected during `knit learn`.
@@ -3334,20 +3313,18 @@ active_days = "uniform"
             entities: vec![
                 Entity {
                     name: "orders".into(),
-                    constraints: vec![
-                        Constraint::Range {
-                            field: "total".into(),
-                            min: Some(Value::Float(0.0)),
-                            max: None,
-                        },
-                    ],
+                    constraints: vec![Constraint::Range {
+                        field: "total".into(),
+                        min: Some(Value::Float(0.0)),
+                        max: None,
+                    }],
                     ..Default::default()
                 },
                 Entity {
                     name: "users".into(),
-                    constraints: vec![
-                        Constraint::Unique { fields: vec!["email".into()] },
-                    ],
+                    constraints: vec![Constraint::Unique {
+                        fields: vec!["email".into()],
+                    }],
                     ..Default::default()
                 },
             ],
@@ -3510,16 +3487,20 @@ active_days = "uniform"
 
     #[test]
     fn test_migrate_to_v2_updates_version() {
-        let mut model = DataModel::default();
-        model.blueprint_version = "1.0".to_string();
+        let mut model = DataModel {
+            blueprint_version: "1.0".to_string(),
+            ..Default::default()
+        };
         model.migrate_to_v2();
         assert_eq!(model.blueprint_version, "2.0");
     }
 
     #[test]
     fn test_migrate_to_v2_idempotent() {
-        let mut model = DataModel::default();
-        model.blueprint_version = "2.0".to_string();
+        let mut model = DataModel {
+            blueprint_version: "2.0".to_string(),
+            ..Default::default()
+        };
         model.migrate_to_v2();
         assert_eq!(model.blueprint_version, "2.0");
     }

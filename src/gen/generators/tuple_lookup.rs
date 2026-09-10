@@ -44,56 +44,56 @@ impl TupleLookupGenerator {
 impl FieldGenerator for TupleLookupGenerator {
     fn generate(&self, rng: &mut dyn Rng, count: usize, ctx: &GenContext) -> ArrayRef {
         let source_col = ctx.batch_columns.get(&self.source_field);
-        let values: Vec<Option<&str>> =
-            match source_col.and_then(|c| c.as_any().downcast_ref::<StringArray>()) {
-                Some(source_arr) => {
-                    // Track per-key shuffle state: (shuffled indices, current position)
-                    let mut key_state: HashMap<&str, (Vec<usize>, usize)> = HashMap::new();
+        let values: Vec<Option<&str>> = match source_col
+            .and_then(|c| c.as_any().downcast_ref::<StringArray>())
+        {
+            Some(source_arr) => {
+                // Track per-key shuffle state: (shuffled indices, current position)
+                let mut key_state: HashMap<&str, (Vec<usize>, usize)> = HashMap::new();
 
-                    (0..count)
-                        .map(|i| {
-                            if i < source_arr.len() && !source_arr.is_null(i) {
-                                let key = source_arr.value(i);
-                                self.lookup.get(key).and_then(|entries| {
-                                    let n = entries.len();
-                                    if n == 0 {
-                                        return None;
+                (0..count)
+                    .map(|i| {
+                        if i < source_arr.len() && !source_arr.is_null(i) {
+                            let key = source_arr.value(i);
+                            self.lookup.get(key).and_then(|entries| {
+                                let n = entries.len();
+                                if n == 0 {
+                                    return None;
+                                }
+                                if n == 1 {
+                                    return Some(entries[0].as_str());
+                                }
+
+                                let (indices, pos) = key_state.entry(key).or_insert_with(|| {
+                                    // Initial Fisher-Yates shuffle
+                                    let mut idx: Vec<usize> = (0..n).collect();
+                                    for k in (1..n).rev() {
+                                        let j = rng.next_u32() as usize % (k + 1);
+                                        idx.swap(k, j);
                                     }
-                                    if n == 1 {
-                                        return Some(entries[0].as_str());
+                                    (idx, 0)
+                                });
+
+                                // Reshuffle at cycle boundary
+                                if *pos > 0 && *pos % n == 0 {
+                                    for k in (1..n).rev() {
+                                        let j = rng.next_u32() as usize % (k + 1);
+                                        indices.swap(k, j);
                                     }
+                                }
 
-                                    let (indices, pos) =
-                                        key_state.entry(key).or_insert_with(|| {
-                                            // Initial Fisher-Yates shuffle
-                                            let mut idx: Vec<usize> = (0..n).collect();
-                                            for k in (1..n).rev() {
-                                                let j = rng.next_u32() as usize % (k + 1);
-                                                idx.swap(k, j);
-                                            }
-                                            (idx, 0)
-                                        });
-
-                                    // Reshuffle at cycle boundary
-                                    if *pos > 0 && *pos % n == 0 {
-                                        for k in (1..n).rev() {
-                                            let j = rng.next_u32() as usize % (k + 1);
-                                            indices.swap(k, j);
-                                        }
-                                    }
-
-                                    let idx = indices[*pos % n];
-                                    *pos += 1;
-                                    Some(entries[idx].as_str())
-                                })
-                            } else {
-                                None
-                            }
-                        })
-                        .collect()
-                }
-                None => vec![None; count],
-            };
+                                let idx = indices[*pos % n];
+                                *pos += 1;
+                                Some(entries[idx].as_str())
+                            })
+                        } else {
+                            None
+                        }
+                    })
+                    .collect()
+            }
+            None => vec![None; count],
+        };
         Arc::new(StringArray::from(values)) as ArrayRef
     }
 

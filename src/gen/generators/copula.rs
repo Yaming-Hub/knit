@@ -100,10 +100,10 @@ fn apply_iman_conover(
     };
 
     // Step 1: Generate correlated standard normals via Cholesky
-    let normal =
-        Normal::new(0.0, 1.0).expect("standard normal distribution uses valid parameters");
+    let normal = Normal::new(0.0, 1.0).expect("standard normal distribution uses valid parameters");
     let mut correlated_normals = vec![vec![0.0f64; count]; n];
 
+    #[allow(clippy::needless_range_loop)] // Rows populate a column-major matrix.
     for row_idx in 0..count {
         let z: Vec<f64> = (0..n).map(|_| normal.inverse_cdf(uniform01(rng))).collect();
         // x = L · z
@@ -129,20 +129,11 @@ fn apply_iman_conover(
             col.as_any().downcast_ref::<Float64Array>()
         {
             f64_arr.values().iter().copied().collect()
-        } else if let Some(i64_arr) = col
-            .as_any()
-            .downcast_ref::<arrow::array::Int64Array>()
-        {
+        } else if let Some(i64_arr) = col.as_any().downcast_ref::<arrow::array::Int64Array>() {
             i64_arr.values().iter().map(|&v| v as f64).collect()
-        } else if let Some(f32_arr) = col
-            .as_any()
-            .downcast_ref::<arrow::array::Float32Array>()
-        {
+        } else if let Some(f32_arr) = col.as_any().downcast_ref::<arrow::array::Float32Array>() {
             f32_arr.values().iter().map(|&v| v as f64).collect()
-        } else if let Some(i32_arr) = col
-            .as_any()
-            .downcast_ref::<arrow::array::Int32Array>()
-        {
+        } else if let Some(i32_arr) = col.as_any().downcast_ref::<arrow::array::Int32Array>() {
             i32_arr.values().iter().map(|&v| v as f64).collect()
         } else {
             // Non-numeric column — skip
@@ -378,10 +369,8 @@ mod tests {
 
         let n = 10_000;
         // Generate independent column values
-        let normal_x =
-            Normal::new(100.0, 15.0).expect("normal distribution uses valid parameters");
-        let normal_y =
-            Normal::new(50.0, 10.0).expect("normal distribution uses valid parameters");
+        let normal_x = Normal::new(100.0, 15.0).expect("normal distribution uses valid parameters");
+        let normal_y = Normal::new(50.0, 10.0).expect("normal distribution uses valid parameters");
         let x_vals: Vec<f64> = (0..n)
             .map(|_| normal_x.inverse_cdf(uniform01(&mut rng)))
             .collect();
@@ -390,8 +379,8 @@ mod tests {
             .collect();
 
         // Record original marginal stats
-        let x_mean_orig: f64 = x_vals.iter().sum::<f64>() / n as f64;
-        let y_mean_orig: f64 = y_vals.iter().sum::<f64>() / n as f64;
+        let _x_mean_orig: f64 = x_vals.iter().sum::<f64>() / n as f64;
+        let _y_mean_orig: f64 = y_vals.iter().sum::<f64>() / n as f64;
         let mut x_sorted = x_vals.clone();
         x_sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
         let mut y_sorted = y_vals.clone();

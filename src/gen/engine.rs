@@ -128,9 +128,7 @@ fn coerce_to_logical_type(
             if let Some(f64_arr) = arr.as_any().downcast_ref::<arrow::array::Float64Array>() {
                 let i32s: arrow::array::Int32Array = f64_arr
                     .iter()
-                    .map(|v| {
-                        v.map(|x| x.clamp(i32::MIN as f64, i32::MAX as f64) as i32)
-                    })
+                    .map(|v| v.map(|x| x.clamp(i32::MIN as f64, i32::MAX as f64) as i32))
                     .collect();
                 return Arc::new(i32s);
             }
@@ -215,14 +213,16 @@ fn coerce_to_logical_type(
             if let Some(i64_arr) = arr.as_any().downcast_ref::<Int64Array>() {
                 let days: arrow::array::Date32Array = i64_arr
                     .iter()
-                    .map(|v| v.and_then(|ms| {
-                        let d = ms.div_euclid(86_400_000);
-                        if d >= i32::MIN as i64 && d <= i32::MAX as i64 {
-                            Some(d as i32)
-                        } else {
-                            None
-                        }
-                    }))
+                    .map(|v| {
+                        v.and_then(|ms| {
+                            let d = ms.div_euclid(86_400_000);
+                            if d >= i32::MIN as i64 && d <= i32::MAX as i64 {
+                                Some(d as i32)
+                            } else {
+                                None
+                            }
+                        })
+                    })
                     .collect();
                 return Arc::new(days);
             }
@@ -867,16 +867,19 @@ impl GenerationEngine {
         // Pre-compute shared row-index caches for RowLookup generators.
         // All RowLookup fields sharing the same source_file get the same cache
         // so they produce coherent (same-row) output.
-        let mut row_index_caches: HashMap<String, Arc<std::sync::Mutex<crate::r#gen::generators::row_lookup::RowIndexCache>>> = HashMap::new();
+        let mut row_index_caches: HashMap<
+            String,
+            Arc<std::sync::Mutex<crate::r#gen::generators::row_lookup::RowIndexCache>>,
+        > = HashMap::new();
         for fp in &ep.field_plans {
-            if let GeneratorPlan::RowLookup { source_file, .. } = &fp.generator_plan {
-                if let Some(sf) = source_file {
-                    row_index_caches
-                        .entry(sf.clone())
-                        .or_insert_with(|| Arc::new(std::sync::Mutex::new(
-                            crate::r#gen::generators::row_lookup::RowIndexCache::new()
-                        )));
-                }
+            if let GeneratorPlan::RowLookup { source_file, .. } = &fp.generator_plan
+                && let Some(sf) = source_file
+            {
+                row_index_caches.entry(sf.clone()).or_insert_with(|| {
+                    Arc::new(std::sync::Mutex::new(
+                        crate::r#gen::generators::row_lookup::RowIndexCache::new(),
+                    ))
+                });
             }
         }
 

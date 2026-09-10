@@ -439,9 +439,9 @@ fn build_entity(
         // Only emit Range for fields that ended up with a Distribution generator
         let has_dist = fields.iter().any(|f| {
             f.name == col.name
-                && f.generator.as_ref().is_some_and(|g| {
-                    matches!(g, crate::core::GeneratorSpec::Distribution { .. })
-                })
+                && f.generator
+                    .as_ref()
+                    .is_some_and(|g| matches!(g, crate::core::GeneratorSpec::Distribution { .. }))
         });
         if !has_dist {
             continue;
@@ -554,8 +554,8 @@ fn build_entity(
 
             // Build N×N correlation matrix (identity + observed pairs)
             let mut matrix = vec![vec![0.0f64; n]; n];
-            for i in 0..n {
-                matrix[i][i] = 1.0;
+            for (i, row) in matrix.iter_mut().enumerate() {
+                row[i] = 1.0;
             }
             for ((a, b), coeff) in &pair_map {
                 if let (Some(i), Some(j)) = (
@@ -594,9 +594,10 @@ fn build_entity(
         .iter()
         .filter(|cd| {
             // Check if the dependent column has categorical weights (discrete)
-            let is_discrete = table.columns.iter().any(|col| {
-                col.name == cd.dependent && col.categorical_weights.is_some()
-            });
+            let is_discrete = table
+                .columns
+                .iter()
+                .any(|col| col.name == cd.dependent && col.categorical_weights.is_some());
             if is_discrete {
                 tracing::debug!(
                     dependent = %cd.dependent,
@@ -620,8 +621,7 @@ fn build_entity(
                     }
                 })
                 .collect();
-            let (def_kind, def_params) =
-                distribution_to_kind_params(&cd.default_distribution);
+            let (def_kind, def_params) = distribution_to_kind_params(&cd.default_distribution);
             crate::core::Correlation {
                 entity: table.name.clone(),
                 correlation_type: Some("conditional_distribution".into()),
@@ -664,7 +664,7 @@ fn build_entity(
         let outer_expanded: Vec<String> = grid
             .outer_values
             .iter()
-            .flat_map(|v| std::iter::repeat(v.clone()).take(inner_len))
+            .flat_map(|v| std::iter::repeat_n(v.clone(), inner_len))
             .collect();
 
         // Inner column: full list tiled |outer| times
@@ -678,10 +678,7 @@ fn build_entity(
 
         if let Some(field) = fields.iter_mut().find(|f| f.name == grid.outer) {
             // Only set cyclic generator for string-typed fields (not date/datetime)
-            let is_string_type = matches!(
-                field.data_type,
-                crate::core::DataType::String
-            );
+            let is_string_type = matches!(field.data_type, crate::core::DataType::String);
             if is_string_type {
                 field.generator = Some(crate::core::GeneratorSpec::Sequence {
                     start: crate::core::IntOrString::Int(0),
@@ -694,10 +691,7 @@ fn build_entity(
             }
         }
         if let Some(field) = fields.iter_mut().find(|f| f.name == grid.inner) {
-            let is_string_type = matches!(
-                field.data_type,
-                crate::core::DataType::String
-            );
+            let is_string_type = matches!(field.data_type, crate::core::DataType::String);
             if is_string_type {
                 field.generator = Some(crate::core::GeneratorSpec::Sequence {
                     start: crate::core::IntOrString::Int(0),
@@ -808,10 +802,8 @@ fn upgrade_sort_date_to_sequence(
     // Upgrade date or datetime columns that are detected as sorted.
     // Date-only columns use Faker("date"), datetime columns use Faker("datetime").
     // Both benefit from a Sequence generator when sorted with a known interval.
-    let is_temporal = matches!(
-        col.inferred_type,
-        Some(InferredType::Date(_))
-    ) || col.temporal_range.is_some();
+    let is_temporal =
+        matches!(col.inferred_type, Some(InferredType::Date(_))) || col.temporal_range.is_some();
     if !is_temporal {
         return;
     }
@@ -925,15 +917,14 @@ fn round_to_interval(seconds: f64) -> String {
 
 /// Convert an epoch timestamp (seconds) to a date or datetime string.
 fn epoch_to_date_string(epoch_secs: f64, has_time: bool) -> String {
-    use chrono::{DateTime, NaiveDateTime, Utc};
+    use chrono::{DateTime, Utc};
     let secs = epoch_secs as i64;
     let nanos = ((epoch_secs - secs as f64) * 1_000_000_000.0) as u32;
-    if let Some(naive) = NaiveDateTime::from_timestamp_opt(secs, nanos) {
+    if let Some(dt) = DateTime::<Utc>::from_timestamp(secs, nanos) {
         if has_time {
-            let dt: DateTime<Utc> = DateTime::from_naive_utc_and_offset(naive, Utc);
             dt.format("%Y-%m-%dT%H:%M:%S").to_string()
         } else {
-            naive.format("%Y-%m-%d").to_string()
+            dt.format("%Y-%m-%d").to_string()
         }
     } else {
         "2000-01-01".to_string()
@@ -1068,7 +1059,10 @@ pub fn score_actor_column(name: &str) -> f64 {
 /// Convert a [`fitting::Distribution`] into a [`DistributionKind`] and its parameter map.
 fn distribution_to_kind_params(
     dist: &crate::learn::fitting::Distribution,
-) -> (crate::core::DistributionKind, std::collections::BTreeMap<String, f64>) {
+) -> (
+    crate::core::DistributionKind,
+    std::collections::BTreeMap<String, f64>,
+) {
     use crate::core::DistributionKind;
     use crate::learn::fitting::Distribution;
     let mut params = std::collections::BTreeMap::new();
@@ -1322,11 +1316,7 @@ fn build_generator_inner(
                     let p75 = s.percentiles.as_ref().map(|p| p.p75).unwrap_or(f64::NAN);
                     if min == 0.0 && p75 == 0.0 {
                         let p95 = s.percentiles.as_ref().map(|p| p.p95).unwrap_or(0.0);
-                        if p95 == 0.0 {
-                            Some(0.95)
-                        } else {
-                            Some(0.85)
-                        }
+                        if p95 == 0.0 { Some(0.95) } else { Some(0.85) }
                     } else {
                         None
                     }
@@ -1403,8 +1393,7 @@ fn build_generator_inner(
         }
         let is_float_source = matches!(
             col.source_arrow_type,
-            Some(arrow::datatypes::DataType::Float32)
-                | Some(arrow::datatypes::DataType::Float64)
+            Some(arrow::datatypes::DataType::Float32) | Some(arrow::datatypes::DataType::Float64)
         );
         if is_float_source {
             return build_float_categorical_generator(weights);
@@ -1567,10 +1556,10 @@ fn build_distribution_generator(
     };
 
     // Insert zero_probability if significant
-    if let Some(zp) = zero_probability {
-        if zp > 0.0 {
-            params.insert("zero_probability".into(), zp);
-        }
+    if let Some(zp) = zero_probability
+        && zp > 0.0
+    {
+        params.insert("zero_probability".into(), zp);
     }
 
     GeneratorSpec::Distribution {
@@ -1961,8 +1950,7 @@ fn infer_data_type(
         // Float-sourced categoricals preserve Float type
         if matches!(
             col.source_arrow_type,
-            Some(arrow::datatypes::DataType::Float32)
-                | Some(arrow::datatypes::DataType::Float64)
+            Some(arrow::datatypes::DataType::Float32) | Some(arrow::datatypes::DataType::Float64)
         ) {
             return crate::core::DataType::Float;
         }
@@ -2273,9 +2261,9 @@ mod tests {
                 stats: None,
                 traits: None,
                 time_series_spec: None,
-                    derived_spec: None,
-                    zero_rate: None,
-                }],
+                derived_spec: None,
+                zero_rate: None,
+            }],
             relationships: vec![RelationshipCandidate {
                 from_table: "orders".into(),
                 from_column: "user_id".into(),
@@ -2331,9 +2319,9 @@ mod tests {
                 stats: None,
                 traits: None,
                 time_series_spec: None,
-                    derived_spec: None,
-                    zero_rate: None,
-                }],
+                derived_spec: None,
+                zero_rate: None,
+            }],
             relationships: vec![],
             correlations: vec![],
             row_count: 500,
@@ -2388,9 +2376,9 @@ mod tests {
                 stats: None,
                 traits: None,
                 time_series_spec: None,
-                    derived_spec: None,
-                    zero_rate: None,
-                }],
+                derived_spec: None,
+                zero_rate: None,
+            }],
             relationships: vec![],
             correlations: vec![],
             row_count: 2000,
@@ -2525,9 +2513,9 @@ mod tests {
                 stats: None,
                 traits: None,
                 time_series_spec: None,
-                    derived_spec: None,
-                    zero_rate: None,
-                }],
+                derived_spec: None,
+                zero_rate: None,
+            }],
             relationships: vec![],
             correlations: vec![],
             row_count: 50_000,
@@ -2575,9 +2563,9 @@ mod tests {
                 stats: None,
                 traits: None,
                 time_series_spec: None,
-                    derived_spec: None,
-                    zero_rate: None,
-                }],
+                derived_spec: None,
+                zero_rate: None,
+            }],
             relationships: vec![],
             correlations: vec![],
             row_count: 100,
@@ -2629,9 +2617,9 @@ mod tests {
             stats: None,
             traits: None,
             time_series_spec: None,
-                    derived_spec: None,
-                    zero_rate: None,
-                };
+            derived_spec: None,
+            zero_rate: None,
+        };
         let r#gen = build_generator(&col, None);
         assert!(matches!(r#gen, GeneratorSpec::UuidGen { version: 4 }));
     }
@@ -2658,9 +2646,9 @@ mod tests {
             stats: None,
             traits: None,
             time_series_spec: None,
-                    derived_spec: None,
-                    zero_rate: None,
-                };
+            derived_spec: None,
+            zero_rate: None,
+        };
         let r#gen = build_generator(&col, None);
         assert!(matches!(r#gen, GeneratorSpec::OneOf { .. }));
     }
@@ -2687,9 +2675,9 @@ mod tests {
             stats: None,
             traits: None,
             time_series_spec: None,
-                    derived_spec: None,
-                    zero_rate: None,
-                };
+            derived_spec: None,
+            zero_rate: None,
+        };
         let r#gen = build_generator(&col, None);
         assert!(
             matches!(r#gen, GeneratorSpec::Faker { ref method, .. } if method == "email"),
@@ -2720,9 +2708,9 @@ mod tests {
             stats: None,
             traits: None,
             time_series_spec: None,
-                    derived_spec: None,
-                    zero_rate: None,
-                };
+            derived_spec: None,
+            zero_rate: None,
+        };
         let r#gen = build_generator(&col, None);
         assert!(
             matches!(r#gen, GeneratorSpec::Faker { ref method, .. } if method == "phone"),
@@ -2755,9 +2743,9 @@ mod tests {
                 stats: None,
                 traits: None,
                 time_series_spec: None,
-                    derived_spec: None,
-                    zero_rate: None,
-                }],
+                derived_spec: None,
+                zero_rate: None,
+            }],
             relationships: vec![],
             correlations: vec![],
             row_count: 100,
@@ -2804,9 +2792,9 @@ mod tests {
                 stats: None,
                 traits: None,
                 time_series_spec: None,
-                    derived_spec: None,
-                    zero_rate: None,
-                }],
+                derived_spec: None,
+                zero_rate: None,
+            }],
             relationships: vec![],
             correlations: vec![],
             row_count: 100,
@@ -2882,9 +2870,9 @@ mod tests {
             stats: None,
             traits: None,
             time_series_spec: None,
-                    derived_spec: None,
-                    zero_rate: None,
-                };
+            derived_spec: None,
+            zero_rate: None,
+        };
         assert_eq!(infer_data_type(&col, None), crate::core::DataType::Int32);
     }
 
@@ -2910,9 +2898,9 @@ mod tests {
             stats: None,
             traits: None,
             time_series_spec: None,
-                    derived_spec: None,
-                    zero_rate: None,
-                };
+            derived_spec: None,
+            zero_rate: None,
+        };
         assert_eq!(infer_data_type(&col, None), crate::core::DataType::Int);
     }
 
@@ -2938,9 +2926,9 @@ mod tests {
             stats: None,
             traits: None,
             time_series_spec: None,
-                    derived_spec: None,
-                    zero_rate: None,
-                };
+            derived_spec: None,
+            zero_rate: None,
+        };
         assert_eq!(infer_data_type(&col, None), crate::core::DataType::Int32);
     }
 
@@ -2975,9 +2963,9 @@ mod tests {
             stats: None,
             traits: None,
             time_series_spec: None,
-                    derived_spec: None,
-                    zero_rate: None,
-                };
+            derived_spec: None,
+            zero_rate: None,
+        };
         assert_eq!(
             infer_data_type(&col, None),
             crate::core::DataType::DatetimeUs
@@ -3015,9 +3003,9 @@ mod tests {
             stats: None,
             traits: None,
             time_series_spec: None,
-                    derived_spec: None,
-                    zero_rate: None,
-                };
+            derived_spec: None,
+            zero_rate: None,
+        };
         assert_eq!(infer_data_type(&col, None), crate::core::DataType::Datetime);
     }
 
@@ -3120,9 +3108,9 @@ mod tests {
                 stats: None,
                 traits: None,
                 time_series_spec: None,
-                    derived_spec: None,
-                    zero_rate: None,
-                },
+                derived_spec: None,
+                zero_rate: None,
+            },
             ColumnAnalysis {
                 name: "EndDate".into(),
                 is_primary_key: false,
@@ -3143,9 +3131,9 @@ mod tests {
                 stats: None,
                 traits: None,
                 time_series_spec: None,
-                    derived_spec: None,
-                    zero_rate: None,
-                },
+                derived_spec: None,
+                zero_rate: None,
+            },
         ];
         let mut fields = vec![
             Field {

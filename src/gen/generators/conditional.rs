@@ -173,10 +173,9 @@ impl FieldGenerator for ConditionalGenerator {
         } else {
             // Check if default is numeric but some branches differ in numeric type
             if dt.is_numeric() {
-                let all_numeric = self
-                    .branches
-                    .iter()
-                    .all(|(_, g)| g.output_type().is_numeric() || g.output_type() == DataType::Null);
+                let all_numeric = self.branches.iter().all(|(_, g)| {
+                    g.output_type().is_numeric() || g.output_type() == DataType::Null
+                });
                 if all_numeric {
                     // Unify to Float64 if there's any type mismatch
                     let any_mismatch = self
@@ -237,10 +236,11 @@ fn unify_numeric_to_float64(arrays: &mut Vec<ArrayRef>) {
 
     for arr in arrays.iter_mut() {
         let dt = arr.data_type();
-        if dt.is_numeric() && *dt != DataType::Float64 {
-            if let Ok(casted) = arrow::compute::cast(arr.as_ref(), &DataType::Float64) {
-                *arr = casted;
-            }
+        if dt.is_numeric()
+            && *dt != DataType::Float64
+            && let Ok(casted) = arrow::compute::cast(arr.as_ref(), &DataType::Float64)
+        {
+            *arr = casted;
         }
     }
 }
@@ -316,7 +316,11 @@ fn array_value_as_string(arr: &ArrayRef, i: usize) -> String {
         // Generic numeric fallback: cast single value to string via Arrow
         arrow::compute::cast(arr, &DataType::Utf8)
             .ok()
-            .and_then(|s| s.as_any().downcast_ref::<StringArray>().map(|sa| sa.value(i).to_string()))
+            .and_then(|s| {
+                s.as_any()
+                    .downcast_ref::<StringArray>()
+                    .map(|sa| sa.value(i).to_string())
+            })
             .unwrap_or_default()
     }
 }

@@ -44,13 +44,19 @@ pub struct RowIndexCache {
     indices: Vec<usize>,
 }
 
-impl RowIndexCache {
-    /// Create a new empty cache (no valid batch yet).
-    pub fn new() -> Self {
+impl Default for RowIndexCache {
+    fn default() -> Self {
         Self {
             batch_key: u64::MAX,
             indices: Vec::new(),
         }
+    }
+}
+
+impl RowIndexCache {
+    /// Create a new empty cache (no valid batch yet).
+    pub fn new() -> Self {
+        Self::default()
     }
 }
 
@@ -229,8 +235,11 @@ mod tests {
         let a2 = r2.as_any().downcast_ref::<StringArray>().unwrap();
 
         // Every output row must be a valid combination from the source
-        let valid_rows: Vec<(&str, &str, &str)> =
-            vec![("Alice", "30", "NYC"), ("Bob", "25", "LA"), ("Carol", "35", "SF")];
+        let valid_rows: Vec<(&str, &str, &str)> = vec![
+            ("Alice", "30", "NYC"),
+            ("Bob", "25", "LA"),
+            ("Carol", "35", "SF"),
+        ];
 
         for i in 0..count {
             let combo = (a0.value(i), a1.value(i), a2.value(i));
@@ -276,9 +285,8 @@ mod tests {
         let a0 = r0_b1.as_any().downcast_ref::<StringArray>().unwrap();
         let a1 = r1_b1.as_any().downcast_ref::<StringArray>().unwrap();
         for i in 0..5 {
-            let matches =
-                (a0.value(i) == "A" && a1.value(i) == "1") ||
-                (a0.value(i) == "B" && a1.value(i) == "2");
+            let matches = (a0.value(i) == "A" && a1.value(i) == "1")
+                || (a0.value(i) == "B" && a1.value(i) == "2");
             assert!(matches, "Batch 1 row {i} incoherent");
         }
 
@@ -289,9 +297,8 @@ mod tests {
         let a0 = r0_b2.as_any().downcast_ref::<StringArray>().unwrap();
         let a1 = r1_b2.as_any().downcast_ref::<StringArray>().unwrap();
         for i in 0..5 {
-            let matches =
-                (a0.value(i) == "A" && a1.value(i) == "1") ||
-                (a0.value(i) == "B" && a1.value(i) == "2");
+            let matches = (a0.value(i) == "A" && a1.value(i) == "1")
+                || (a0.value(i) == "B" && a1.value(i) == "2");
             assert!(matches, "Batch 2 row {i} incoherent");
         }
     }

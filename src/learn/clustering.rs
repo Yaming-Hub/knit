@@ -933,8 +933,15 @@ mod tests {
         assert!(result.is_some());
 
         let result = result.unwrap();
-        assert!(result.k >= 2, "should find at least 2 clusters, got {}", result.k);
-        assert!(result.silhouette_score > 0.0, "silhouette should be positive");
+        assert!(
+            result.k >= 2,
+            "should find at least 2 clusters, got {}",
+            result.k
+        );
+        assert!(
+            result.silhouette_score > 0.0,
+            "silhouette should be positive"
+        );
         assert_eq!(result.personas.len(), result.k);
         assert_eq!(result.assignments.len(), 20);
 
@@ -989,13 +996,7 @@ mod tests {
     fn discover_personas_deterministic() {
         let mut profiles = Vec::new();
         for i in 0..8 {
-            profiles.push(make_profile(
-                &format!("a{i}"),
-                8 + (i % 2),
-                i % 5,
-                50,
-                30.0,
-            ));
+            profiles.push(make_profile(&format!("a{i}"), 8 + (i % 2), i % 5, 50, 30.0));
         }
         for i in 0..8 {
             profiles.push(make_profile(
@@ -1017,7 +1018,10 @@ mod tests {
         match (r1, r2) {
             (Some(a), Some(b)) => {
                 assert_eq!(a.k, b.k, "same seed should produce same K");
-                assert_eq!(a.assignments, b.assignments, "same seed should produce same assignments");
+                assert_eq!(
+                    a.assignments, b.assignments,
+                    "same seed should produce same assignments"
+                );
             }
             (None, None) => {} // both None is fine
             _ => panic!("determinism failure: one returned Some, other None"),
@@ -1046,7 +1050,10 @@ mod tests {
         avg_hours[8] = 0.6;
         let name = generate_persona_name(0, &avg_hours, "weekday_heavy", 150.0);
         assert!(name.contains("power"), "expected 'power' in {name}");
-        assert!(name.contains("early_bird"), "expected 'early_bird' in {name}");
+        assert!(
+            name.contains("early_bird"),
+            "expected 'early_bird' in {name}"
+        );
 
         avg_hours[8] = 0.0;
         avg_hours[22] = 0.6;
@@ -1148,8 +1155,12 @@ mod tests {
             .iter()
             .map(|p| &p.traits["active_days_pattern"])
             .collect();
-        let has_weekday = patterns.iter().any(|v| matches!(v, Value::String(s) if s == "weekday_heavy"));
-        let has_weekend = patterns.iter().any(|v| matches!(v, Value::String(s) if s == "weekend_heavy"));
+        let has_weekday = patterns
+            .iter()
+            .any(|v| matches!(v, Value::String(s) if s == "weekday_heavy"));
+        let has_weekend = patterns
+            .iter()
+            .any(|v| matches!(v, Value::String(s) if s == "weekend_heavy"));
         assert!(has_weekday, "should detect weekday_heavy pattern");
         assert!(has_weekend, "should detect weekend_heavy pattern");
     }

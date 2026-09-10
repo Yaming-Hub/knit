@@ -17,7 +17,10 @@ use indicatif::{ProgressBar, ProgressStyle};
 use serde_json;
 use tracing::{debug, info, info_span, warn};
 
-use crate::learn::correlation::{detect_correlations, detect_conditional_distributions, detect_tuple_columns, detect_derived_text_columns, detect_grid_structures};
+use crate::learn::correlation::{
+    detect_conditional_distributions, detect_correlations, detect_derived_text_columns,
+    detect_grid_structures, detect_tuple_columns,
+};
 use crate::learn::fitting::{FitResult, fit_categorical, fit_distribution};
 use crate::learn::ingest::{self, IngestionResult};
 use crate::learn::profile::{ColumnProfile, compute_profiles};
@@ -48,8 +51,11 @@ fn resolve_use_structured(output: &str, model_format: Option<crate::cli::ModelFo
                 return true;
             }
             match p.extension().and_then(|e| e.to_str()) {
-                Some(ext) if ext.eq_ignore_ascii_case("toml")
-                    || ext.eq_ignore_ascii_case("json") => false,
+                Some(ext)
+                    if ext.eq_ignore_ascii_case("toml") || ext.eq_ignore_ascii_case("json") =>
+                {
+                    false
+                }
                 Some(_) => true,
                 None => true,
             }
@@ -460,8 +466,7 @@ fn run_batch(
     let dict_count = extract_dictionaries(&mut data_model, &tables, &output_dir, cli.quiet)?;
 
     // 5b-tuple. Extract tuple dictionaries for co-occurring column groups
-    let tuple_count =
-        extract_tuple_dictionaries(&mut data_model, &table_analyses, &output_dir)?;
+    let tuple_count = extract_tuple_dictionaries(&mut data_model, &table_analyses, &output_dir)?;
     if tuple_count > 0 && !cli.quiet {
         eprintln!("  Extracted {tuple_count} tuple dictionaries");
     }
@@ -1056,47 +1061,54 @@ fn analyse_table(table: &IngestionResult) -> Result<(TableAnalysis, TableProfile
         // For sorted numeric columns with high uniqueness, replace distribution
         // with a linear time-series (effectively a sequence). This ensures columns
         // like "year" (1880..2023) generate monotonically increasing values.
-        if let Some(col) = analysis.columns.iter_mut().find(|c| c.name == sort_order.column) {
-            if col.temporal_pattern.is_none() && col.distribution.is_some() {
-                let values = extract_f64_column(&combined, &col.name);
-                let n_valid = values.len() as f64;
-                let distinct_count = {
-                    let mut uniq = std::collections::HashSet::new();
-                    for &(_, v) in &values {
-                        uniq.insert(v.to_bits());
-                    }
-                    uniq.len()
-                };
-                // If >=80% of values are unique, convert to sequence-like time_series
-                if n_valid > 1.0 && distinct_count as f64 / n_valid >= 0.8 && values.len() >= 10 {
-                    let min_val = values.iter().map(|(_, y)| *y).fold(f64::INFINITY, f64::min);
-                    let max_val = values.iter().map(|(_, y)| *y).fold(f64::NEG_INFINITY, f64::max);
-                    let step = (max_val - min_val) / (n_valid - 1.0);
-
-                    // Honor descending direction: negate slope so output counts down
-                    let is_desc = matches!(sort_order.direction, crate::core::SortDirection::Desc);
-                    let (baseline, slope) = if is_desc {
-                        (max_val, -step)
-                    } else {
-                        (min_val, step)
-                    };
-
-                    use crate::core::TimeSeriesComponent;
-                    col.time_series_spec = Some(crate::core::GeneratorSpec::TimeSeries {
-                        baseline,
-                        components: vec![TimeSeriesComponent::Trend { slope, degree: 1 }],
-                        min: Some(min_val),
-                        max: Some(max_val),
-                        timestamp_field: None,
-                    });
-                    tracing::debug!(
-                        column = %sort_order.column,
-                        start = baseline,
-                        step = slope,
-                        descending = is_desc,
-                        "sort column converted to sequence time-series"
-                    );
+        if let Some(col) = analysis
+            .columns
+            .iter_mut()
+            .find(|c| c.name == sort_order.column)
+            && col.temporal_pattern.is_none()
+            && col.distribution.is_some()
+        {
+            let values = extract_f64_column(&combined, &col.name);
+            let n_valid = values.len() as f64;
+            let distinct_count = {
+                let mut uniq = std::collections::HashSet::new();
+                for &(_, v) in &values {
+                    uniq.insert(v.to_bits());
                 }
+                uniq.len()
+            };
+            // If >=80% of values are unique, convert to sequence-like time_series
+            if n_valid > 1.0 && distinct_count as f64 / n_valid >= 0.8 && values.len() >= 10 {
+                let min_val = values.iter().map(|(_, y)| *y).fold(f64::INFINITY, f64::min);
+                let max_val = values
+                    .iter()
+                    .map(|(_, y)| *y)
+                    .fold(f64::NEG_INFINITY, f64::max);
+                let step = (max_val - min_val) / (n_valid - 1.0);
+
+                // Honor descending direction: negate slope so output counts down
+                let is_desc = matches!(sort_order.direction, crate::core::SortDirection::Desc);
+                let (baseline, slope) = if is_desc {
+                    (max_val, -step)
+                } else {
+                    (min_val, step)
+                };
+
+                use crate::core::TimeSeriesComponent;
+                col.time_series_spec = Some(crate::core::GeneratorSpec::TimeSeries {
+                    baseline,
+                    components: vec![TimeSeriesComponent::Trend { slope, degree: 1 }],
+                    min: Some(min_val),
+                    max: Some(max_val),
+                    timestamp_field: None,
+                });
+                tracing::debug!(
+                    column = %sort_order.column,
+                    start = baseline,
+                    step = slope,
+                    descending = is_desc,
+                    "sort column converted to sequence time-series"
+                );
             }
         }
     }
@@ -1163,14 +1175,14 @@ fn detect_sort_order(
     }
 
     for (col_idx, col_name) in &candidates {
-        if let Some(arr) = batch.column_by_name(col_name) {
-            if let Some(dir) = check_column_sorted(arr.as_ref()) {
-                let _ = col_idx; // suppress unused warning
-                return Some(SortOrder {
-                    column: col_name.to_string(),
-                    direction: dir,
-                });
-            }
+        if let Some(arr) = batch.column_by_name(col_name)
+            && let Some(dir) = check_column_sorted(arr.as_ref())
+        {
+            let _ = col_idx; // suppress unused warning
+            return Some(SortOrder {
+                column: col_name.to_string(),
+                direction: dir,
+            });
         }
     }
 
@@ -1197,41 +1209,53 @@ fn check_column_sorted(arr: &dyn arrow::array::Array) -> Option<crate::core::Sor
         }
         DataType::Float64 => {
             let a = arr.as_any().downcast_ref::<array::Float64Array>()?;
-            check_sorted_float(a.iter().filter_map(|v| v.map(|x| x)))
+            check_sorted_float(a.iter().flatten())
         }
         DataType::Utf8 => {
             let a = arr.as_any().downcast_ref::<array::StringArray>()?;
-            let vals: Vec<&str> = (0..a.len()).filter(|&i| !a.is_null(i)).map(|i| a.value(i)).collect();
+            let vals: Vec<&str> = (0..a.len())
+                .filter(|&i| !a.is_null(i))
+                .map(|i| a.value(i))
+                .collect();
             check_sorted_ord(&vals)
         }
         DataType::LargeUtf8 => {
             let a = arr.as_any().downcast_ref::<array::LargeStringArray>()?;
-            let vals: Vec<&str> = (0..a.len()).filter(|&i| !a.is_null(i)).map(|i| a.value(i)).collect();
+            let vals: Vec<&str> = (0..a.len())
+                .filter(|&i| !a.is_null(i))
+                .map(|i| a.value(i))
+                .collect();
             check_sorted_ord(&vals)
         }
         DataType::Timestamp(TimeUnit::Second, _) => {
             let a = arr.as_any().downcast_ref::<array::TimestampSecondArray>()?;
-            let vals: Vec<i64> = a.iter().filter_map(|v| v).collect();
+            let vals: Vec<i64> = a.iter().flatten().collect();
             check_sorted_ord(&vals)
         }
         DataType::Timestamp(TimeUnit::Millisecond, _) => {
-            let a = arr.as_any().downcast_ref::<array::TimestampMillisecondArray>()?;
-            let vals: Vec<i64> = a.iter().filter_map(|v| v).collect();
+            let a = arr
+                .as_any()
+                .downcast_ref::<array::TimestampMillisecondArray>()?;
+            let vals: Vec<i64> = a.iter().flatten().collect();
             check_sorted_ord(&vals)
         }
         DataType::Timestamp(TimeUnit::Microsecond, _) => {
-            let a = arr.as_any().downcast_ref::<array::TimestampMicrosecondArray>()?;
-            let vals: Vec<i64> = a.iter().filter_map(|v| v).collect();
+            let a = arr
+                .as_any()
+                .downcast_ref::<array::TimestampMicrosecondArray>()?;
+            let vals: Vec<i64> = a.iter().flatten().collect();
             check_sorted_ord(&vals)
         }
         DataType::Timestamp(TimeUnit::Nanosecond, _) => {
-            let a = arr.as_any().downcast_ref::<array::TimestampNanosecondArray>()?;
-            let vals: Vec<i64> = a.iter().filter_map(|v| v).collect();
+            let a = arr
+                .as_any()
+                .downcast_ref::<array::TimestampNanosecondArray>()?;
+            let vals: Vec<i64> = a.iter().flatten().collect();
             check_sorted_ord(&vals)
         }
         DataType::Date32 => {
             let a = arr.as_any().downcast_ref::<array::Date32Array>()?;
-            let vals: Vec<i32> = a.iter().filter_map(|v| v).collect();
+            let vals: Vec<i32> = a.iter().flatten().collect();
             check_sorted_ord(&vals)
         }
         _ => None,
@@ -1243,10 +1267,30 @@ fn check_sorted_i64(arr: &dyn arrow::array::Array) -> Option<crate::core::SortDi
     use arrow::array;
     // Extract as i64 regardless of width
     let vals: Vec<i64> = match arr.data_type() {
-        DataType::Int8 => arr.as_any().downcast_ref::<array::Int8Array>()?.iter().filter_map(|v| v.map(i64::from)).collect(),
-        DataType::Int16 => arr.as_any().downcast_ref::<array::Int16Array>()?.iter().filter_map(|v| v.map(i64::from)).collect(),
-        DataType::Int32 => arr.as_any().downcast_ref::<array::Int32Array>()?.iter().filter_map(|v| v.map(i64::from)).collect(),
-        DataType::Int64 => arr.as_any().downcast_ref::<array::Int64Array>()?.iter().filter_map(|v| v).collect(),
+        DataType::Int8 => arr
+            .as_any()
+            .downcast_ref::<array::Int8Array>()?
+            .iter()
+            .filter_map(|v| v.map(i64::from))
+            .collect(),
+        DataType::Int16 => arr
+            .as_any()
+            .downcast_ref::<array::Int16Array>()?
+            .iter()
+            .filter_map(|v| v.map(i64::from))
+            .collect(),
+        DataType::Int32 => arr
+            .as_any()
+            .downcast_ref::<array::Int32Array>()?
+            .iter()
+            .filter_map(|v| v.map(i64::from))
+            .collect(),
+        DataType::Int64 => arr
+            .as_any()
+            .downcast_ref::<array::Int64Array>()?
+            .iter()
+            .flatten()
+            .collect(),
         _ => return None,
     };
     check_sorted_ord(&vals)
@@ -1256,10 +1300,30 @@ fn check_sorted_i64(arr: &dyn arrow::array::Array) -> Option<crate::core::SortDi
 fn check_sorted_uint(arr: &dyn arrow::array::Array) -> Option<crate::core::SortDirection> {
     use arrow::array;
     let vals: Vec<u64> = match arr.data_type() {
-        DataType::UInt8 => arr.as_any().downcast_ref::<array::UInt8Array>()?.iter().filter_map(|v| v.map(u64::from)).collect(),
-        DataType::UInt16 => arr.as_any().downcast_ref::<array::UInt16Array>()?.iter().filter_map(|v| v.map(u64::from)).collect(),
-        DataType::UInt32 => arr.as_any().downcast_ref::<array::UInt32Array>()?.iter().filter_map(|v| v.map(u64::from)).collect(),
-        DataType::UInt64 => arr.as_any().downcast_ref::<array::UInt64Array>()?.iter().filter_map(|v| v).collect(),
+        DataType::UInt8 => arr
+            .as_any()
+            .downcast_ref::<array::UInt8Array>()?
+            .iter()
+            .filter_map(|v| v.map(u64::from))
+            .collect(),
+        DataType::UInt16 => arr
+            .as_any()
+            .downcast_ref::<array::UInt16Array>()?
+            .iter()
+            .filter_map(|v| v.map(u64::from))
+            .collect(),
+        DataType::UInt32 => arr
+            .as_any()
+            .downcast_ref::<array::UInt32Array>()?
+            .iter()
+            .filter_map(|v| v.map(u64::from))
+            .collect(),
+        DataType::UInt64 => arr
+            .as_any()
+            .downcast_ref::<array::UInt64Array>()?
+            .iter()
+            .flatten()
+            .collect(),
         _ => return None,
     };
     check_sorted_ord(&vals)
@@ -1327,8 +1391,7 @@ fn detect_time_series_trends(
     // Accept sorted temporal columns OR sorted integer/float columns as time axis.
     // Integer sequences like "year" (1880, 1881, ...) are valid time indices.
     let sort_col_is_valid_axis = analysis.columns.iter().any(|c| {
-        c.name == sort_col_name
-            && (c.temporal_pattern.is_some() || c.distribution.is_some())
+        c.name == sort_col_name && (c.temporal_pattern.is_some() || c.distribution.is_some())
     });
     if !sort_col_is_valid_axis {
         return;
@@ -1424,23 +1487,27 @@ fn detect_time_series_trends(
                 if let Some((period_rows, amplitude)) = seasonal {
                     // Seasonal pattern found — use trend (even if weak) + seasonality
                     let weak_slope = if r_squared >= 0.01 { slope } else { 0.0 };
-                    (weak_slope, r_squared.max(0.5), vec![
-                        TimeSeriesComponent::Seasonality {
+                    (
+                        weak_slope,
+                        r_squared.max(0.5),
+                        vec![TimeSeriesComponent::Seasonality {
                             period: format!("{}", period_rows),
                             amplitude,
                             phase: 0.0,
-                        },
-                    ])
+                        }],
+                    )
                 } else {
                     // No clear seasonality but high autocorrelation — use AR(1)
                     let weak_slope = if r_squared >= 0.05 { slope } else { 0.0 };
                     // Clamp AR coefficient to valid stable range
                     let ar_coeff = autocorr.clamp(0.7, 0.98);
-                    (weak_slope, r_squared.max(0.5), vec![
-                        TimeSeriesComponent::Autoregressive {
+                    (
+                        weak_slope,
+                        r_squared.max(0.5),
+                        vec![TimeSeriesComponent::Autoregressive {
                             coefficients: vec![ar_coeff],
-                        },
-                    ])
+                        }],
+                    )
                 }
             } else {
                 continue;
@@ -1474,7 +1541,8 @@ fn detect_time_series_trends(
                     let predicted = mean_y + final_slope * (i as f64 - mean_x);
                     (y - predicted).powi(2)
                 })
-                .sum::<f64>() / (n_f - 2.0);
+                .sum::<f64>()
+                / (n_f - 2.0);
             residual_var.sqrt()
         };
 
@@ -1486,10 +1554,15 @@ fn detect_time_series_trends(
 
         // Build component list. For AR models, noise (innovation) must precede
         // the AR component so that random perturbations feed back into future AR terms.
-        let has_ar = extra_components.iter().any(|c| matches!(c, TimeSeriesComponent::Autoregressive { .. }));
+        let has_ar = extra_components
+            .iter()
+            .any(|c| matches!(c, TimeSeriesComponent::Autoregressive { .. }));
         let mut components = vec![];
         if final_slope.abs() > f64::EPSILON {
-            components.push(TimeSeriesComponent::Trend { slope: final_slope, degree: 1 });
+            components.push(TimeSeriesComponent::Trend {
+                slope: final_slope,
+                degree: 1,
+            });
         }
         if has_ar && noise_std > f64::EPSILON {
             // Insert noise before AR for proper feedback
@@ -1694,28 +1767,27 @@ fn detect_temporal_ordering(
                 continue;
             }
 
-            let (base_col, derived_col) =
-                if ordered as f64 / total as f64 >= 0.95 {
-                    (col_a.clone(), col_b.clone())
+            let (base_col, derived_col) = if ordered as f64 / total as f64 >= 0.95 {
+                (col_a.clone(), col_b.clone())
+            } else {
+                // Try reverse: col_a >= col_b
+                let mut rev_ordered = 0u64;
+                let mut rev_diffs: Vec<f64> = Vec::new();
+                for k in 0..ts_a.len() {
+                    if let (Some(a), Some(b)) = (ts_a[k], ts_b[k])
+                        && a >= b
+                    {
+                        rev_ordered += 1;
+                        rev_diffs.push(a - b);
+                    }
+                }
+                if rev_ordered as f64 / total as f64 >= 0.95 {
+                    diffs = rev_diffs;
+                    (col_b.clone(), col_a.clone())
                 } else {
-                    // Try reverse: col_a >= col_b
-                    let mut rev_ordered = 0u64;
-                    let mut rev_diffs: Vec<f64> = Vec::new();
-                    for k in 0..ts_a.len() {
-                        if let (Some(a), Some(b)) = (ts_a[k], ts_b[k]) {
-                            if a >= b {
-                                rev_ordered += 1;
-                                rev_diffs.push(a - b);
-                            }
-                        }
-                    }
-                    if rev_ordered as f64 / total as f64 >= 0.95 {
-                        diffs = rev_diffs;
-                        (col_b.clone(), col_a.clone())
-                    } else {
-                        continue;
-                    }
-                };
+                    continue;
+                }
+            };
 
             if diffs.is_empty() {
                 continue;
@@ -1755,10 +1827,7 @@ fn detect_temporal_ordering(
 }
 
 /// Extract timestamps from a column as epoch seconds (f64).
-fn extract_timestamps_as_epoch(
-    batch: &RecordBatch,
-    col_name: &str,
-) -> Vec<Option<f64>> {
+fn extract_timestamps_as_epoch(batch: &RecordBatch, col_name: &str) -> Vec<Option<f64>> {
     use arrow::array::*;
     use arrow::datatypes::DataType;
 
@@ -1779,19 +1848,35 @@ fn extract_timestamps_as_epoch(
             };
             if let Some(a) = arr.as_any().downcast_ref::<TimestampNanosecondArray>() {
                 for i in 0..n {
-                    result.push(if a.is_null(i) { None } else { Some(a.value(i) as f64 * 0.000_000_001) });
+                    result.push(if a.is_null(i) {
+                        None
+                    } else {
+                        Some(a.value(i) as f64 * 0.000_000_001)
+                    });
                 }
             } else if let Some(a) = arr.as_any().downcast_ref::<TimestampMicrosecondArray>() {
                 for i in 0..n {
-                    result.push(if a.is_null(i) { None } else { Some(a.value(i) as f64 * 0.000_001) });
+                    result.push(if a.is_null(i) {
+                        None
+                    } else {
+                        Some(a.value(i) as f64 * 0.000_001)
+                    });
                 }
             } else if let Some(a) = arr.as_any().downcast_ref::<TimestampMillisecondArray>() {
                 for i in 0..n {
-                    result.push(if a.is_null(i) { None } else { Some(a.value(i) as f64 * 0.001) });
+                    result.push(if a.is_null(i) {
+                        None
+                    } else {
+                        Some(a.value(i) as f64 * 0.001)
+                    });
                 }
             } else if let Some(a) = arr.as_any().downcast_ref::<TimestampSecondArray>() {
                 for i in 0..n {
-                    result.push(if a.is_null(i) { None } else { Some(a.value(i) as f64) });
+                    result.push(if a.is_null(i) {
+                        None
+                    } else {
+                        Some(a.value(i) as f64)
+                    });
                 }
             } else {
                 // Generic timestamp: use the multiplier
@@ -1811,11 +1896,13 @@ fn extract_timestamps_as_epoch(
                     // Try common datetime formats
                     if let Ok(dt) = chrono::NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S") {
                         result.push(Some(dt.and_utc().timestamp() as f64));
-                    } else if let Ok(dt) = chrono::NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S") {
+                    } else if let Ok(dt) =
+                        chrono::NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S")
+                    {
                         result.push(Some(dt.and_utc().timestamp() as f64));
                     } else if let Ok(d) = chrono::NaiveDate::parse_from_str(s, "%Y-%m-%d") {
                         result.push(Some(
-                            d.and_hms_opt(0, 0, 0).unwrap().and_utc().timestamp() as f64,
+                            d.and_hms_opt(0, 0, 0).unwrap().and_utc().timestamp() as f64
                         ));
                     } else {
                         result.push(None);
@@ -1875,12 +1962,11 @@ fn extract_f64_column(batch: &RecordBatch, col_name: &str) -> Vec<(usize, f64)> 
         ArrowDT::Utf8 => {
             let a = arr.as_any().downcast_ref::<StringArray>().unwrap();
             for i in 0..n {
-                if !a.is_null(i) {
-                    if let Ok(v) = a.value(i).parse::<f64>() {
-                        if v.is_finite() {
-                            out.push((i, v));
-                        }
-                    }
+                if !a.is_null(i)
+                    && let Ok(v) = a.value(i).parse::<f64>()
+                    && v.is_finite()
+                {
+                    out.push((i, v));
                 }
             }
         }
@@ -2151,12 +2237,12 @@ fn detect_geographic_tuples(
                     tuples = tuples.len(),
                     "geographic tuple group created"
                 );
-                analysis.tuple_groups.push(
-                    crate::learn::correlation::TupleGroup {
+                analysis
+                    .tuple_groups
+                    .push(crate::learn::correlation::TupleGroup {
                         columns: group_cols,
                         tuples,
-                    },
-                );
+                    });
             }
         }
     }
@@ -2233,10 +2319,10 @@ fn detect_arithmetic_relations(batch: &RecordBatch, analysis: &mut TableAnalysis
     // Collect numeric columns with their values (only non-null rows as full vectors for alignment)
     let mut numeric_data: Vec<(String, Vec<Option<f64>>)> = Vec::new();
     for col in &analysis.columns {
-        if let Some(arr) = batch.column_by_name(&col.name) {
-            if let Some(vals) = extract_nullable_f64_values(arr.as_ref(), n) {
-                numeric_data.push((col.name.clone(), vals));
-            }
+        if let Some(arr) = batch.column_by_name(&col.name)
+            && let Some(vals) = extract_nullable_f64_values(arr.as_ref(), n)
+        {
+            numeric_data.push((col.name.clone(), vals));
         }
     }
 
@@ -2275,11 +2361,9 @@ fn detect_arithmetic_relations(batch: &RecordBatch, analysis: &mut TableAnalysis
                 if i < j {
                     let error_rate =
                         compute_relation_error(target_vals, vals_a, vals_b, ArithOp::Add, n);
-                    if error_rate < 0.05
-                        && best_match.as_ref().map_or(true, |(_, e)| error_rate < *e)
+                    if error_rate < 0.05 && best_match.as_ref().is_none_or(|(_, e)| error_rate < *e)
                     {
-                        best_match =
-                            Some((format!("${{{name_a}}} + ${{{name_b}}}"), error_rate));
+                        best_match = Some((format!("${{{name_a}}} + ${{{name_b}}}"), error_rate));
                     }
                 }
 
@@ -2287,11 +2371,9 @@ fn detect_arithmetic_relations(batch: &RecordBatch, analysis: &mut TableAnalysis
                 {
                     let error_rate =
                         compute_relation_error(target_vals, vals_a, vals_b, ArithOp::Sub, n);
-                    if error_rate < 0.05
-                        && best_match.as_ref().map_or(true, |(_, e)| error_rate < *e)
+                    if error_rate < 0.05 && best_match.as_ref().is_none_or(|(_, e)| error_rate < *e)
                     {
-                        best_match =
-                            Some((format!("${{{name_a}}} - ${{{name_b}}}"), error_rate));
+                        best_match = Some((format!("${{{name_a}}} - ${{{name_b}}}"), error_rate));
                     }
                 }
 
@@ -2299,11 +2381,9 @@ fn detect_arithmetic_relations(batch: &RecordBatch, analysis: &mut TableAnalysis
                 if i < j {
                     let error_rate =
                         compute_relation_error(target_vals, vals_a, vals_b, ArithOp::Mul, n);
-                    if error_rate < 0.05
-                        && best_match.as_ref().map_or(true, |(_, e)| error_rate < *e)
+                    if error_rate < 0.05 && best_match.as_ref().is_none_or(|(_, e)| error_rate < *e)
                     {
-                        best_match =
-                            Some((format!("${{{name_a}}} * ${{{name_b}}}"), error_rate));
+                        best_match = Some((format!("${{{name_a}}} * ${{{name_b}}}"), error_rate));
                     }
                 }
 
@@ -2311,11 +2391,9 @@ fn detect_arithmetic_relations(batch: &RecordBatch, analysis: &mut TableAnalysis
                 {
                     let error_rate =
                         compute_relation_error(target_vals, vals_a, vals_b, ArithOp::Div, n);
-                    if error_rate < 0.05
-                        && best_match.as_ref().map_or(true, |(_, e)| error_rate < *e)
+                    if error_rate < 0.05 && best_match.as_ref().is_none_or(|(_, e)| error_rate < *e)
                     {
-                        best_match =
-                            Some((format!("${{{name_a}}} / ${{{name_b}}}"), error_rate));
+                        best_match = Some((format!("${{{name_a}}} / ${{{name_b}}}"), error_rate));
                     }
                 }
             }
@@ -2353,19 +2431,18 @@ fn detect_arithmetic_relations(batch: &RecordBatch, analysis: &mut TableAnalysis
         }
 
         // Compute target mean to filter: target should be larger than most components
-        let target_mean: f64 = target_vals.iter().filter_map(|v| *v).sum::<f64>()
-            / non_null_count as f64;
+        let target_mean: f64 =
+            target_vals.iter().filter_map(|v| *v).sum::<f64>() / non_null_count as f64;
         if target_mean.abs() < f64::EPSILON {
             continue;
         }
 
         // Collect candidate addend columns (those with smaller mean than target)
         let mut candidates: Vec<usize> = Vec::new();
-        for i in 0..numeric_data.len() {
+        for (i, (_, vals)) in numeric_data.iter().enumerate() {
             if i == target_idx {
                 continue;
             }
-            let (_, ref vals) = numeric_data[i];
             let count = vals.iter().filter(|v| v.is_some()).count();
             if count < 10 {
                 continue;
@@ -2529,7 +2606,17 @@ fn extract_nullable_f64_values(
     macro_rules! extract_nullable {
         ($arr:expr, $ty:ty, $n:expr) => {{
             let a = $arr.as_any().downcast_ref::<$ty>()?;
-            Some((0..$n).map(|i| if a.is_null(i) { None } else { Some(a.value(i) as f64) }).collect())
+            Some(
+                (0..$n)
+                    .map(|i| {
+                        if a.is_null(i) {
+                            None
+                        } else {
+                            Some(a.value(i) as f64)
+                        }
+                    })
+                    .collect(),
+            )
         }};
     }
 
@@ -2632,9 +2719,7 @@ fn reaches_self_owned(
             if neighbor == start {
                 return true;
             }
-            if seen.insert(neighbor.clone())
-                && reaches_self_owned(neighbor, start, deps, seen)
-            {
+            if seen.insert(neighbor.clone()) && reaches_self_owned(neighbor, start, deps, seen) {
                 return true;
             }
         }
@@ -2676,12 +2761,11 @@ fn detect_column_constraints(
     // Collect numeric column indices and their f64 values
     let mut numeric_cols: Vec<(&str, Vec<f64>)> = Vec::new();
     for col in columns {
-        if let Some(arr) = batch.column_by_name(&col.name) {
-            if let Some(vals) = extract_f64_values(arr.as_ref()) {
-                if vals.len() >= 2 {
-                    numeric_cols.push((&col.name, vals));
-                }
-            }
+        if let Some(arr) = batch.column_by_name(&col.name)
+            && let Some(vals) = extract_f64_values(arr.as_ref())
+            && vals.len() >= 2
+        {
+            numeric_cols.push((&col.name, vals));
         }
     }
 
@@ -2690,8 +2774,9 @@ fn detect_column_constraints(
     // of tight [min, max] clamping which breaks trended series where the regression
     // baseline differs from the observed bounds.
     for (name, vals) in &numeric_cols {
-        let is_time_series =
-            columns.iter().any(|c| c.name == *name && c.time_series_spec.is_some());
+        let is_time_series = columns
+            .iter()
+            .any(|c| c.name == *name && c.time_series_spec.is_some());
         let min = vals.iter().copied().fold(f64::INFINITY, f64::min);
         let max = vals.iter().copied().fold(f64::NEG_INFINITY, f64::max);
         if !min.is_finite() || !max.is_finite() || min >= max {
@@ -2820,7 +2905,7 @@ fn extract_f64_values(arr: &dyn arrow::array::Array) -> Option<Vec<f64>> {
             arr.as_any()
                 .downcast_ref::<array::Float64Array>()?
                 .iter()
-                .filter_map(|v| v)
+                .flatten()
                 .collect(),
         ),
         _ => None,
@@ -2945,8 +3030,7 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
                 let zero_rate = zero_count as f64 / values.len() as f64;
                 let fit_values = if zero_rate > 0.5 {
                     zero_rate_detected = Some(zero_rate);
-                    let non_zero: Vec<f64> =
-                        values.iter().copied().filter(|&v| v != 0.0).collect();
+                    let non_zero: Vec<f64> = values.iter().copied().filter(|&v| v != 0.0).collect();
                     if non_zero.len() >= 2 {
                         non_zero
                     } else {
@@ -4090,9 +4174,9 @@ fn extract_dictionaries(
                     // A string-valued OneOf at the 200-choice cap MAY have been truncated.
                     // We check below whether the source data actually has more unique values.
                     choices.len() == 200
-                        && choices.iter().all(|c| {
-                            matches!(c.value, crate::core::Value::String(_))
-                        })
+                        && choices
+                            .iter()
+                            .all(|c| matches!(c.value, crate::core::Value::String(_)))
                 }
                 _ => false,
             };
@@ -4116,10 +4200,10 @@ fn extract_dictionaries(
             // actually has MORE unique values than the OneOf (confirming truncation).
             // If unique_values.len() == OneOf.len(), the OneOf wasn't truncated and
             // already preserves frequency weights that a Dictionary would lose.
-            if let Some(crate::core::GeneratorSpec::OneOf { choices }) = &field.generator {
-                if unique_values.len() <= choices.len() {
-                    continue;
-                }
+            if let Some(crate::core::GeneratorSpec::OneOf { choices }) = &field.generator
+                && unique_values.len() <= choices.len()
+            {
+                continue;
             }
 
             // Write dictionary file (sanitize filename components)
@@ -4212,17 +4296,15 @@ fn extract_tuple_dictionaries(
             // For 2-column tuples where the primary already has a Dictionary,
             // replace it with a tuple dictionary to preserve cross-column coherence.
             // The standalone dictionary loses the relationship between columns.
-            if group.columns.len() == 2 {
-                if let Some(field) = entity.fields.iter_mut().find(|f| f.name == *primary) {
-                    if let Some(crate::core::GeneratorSpec::Dictionary { ref file, .. }) =
-                        field.generator
-                    {
-                        // Remove the standalone dictionary file — tuple subsumes it
-                        let old_path = output_dir.join(file);
-                        let _ = std::fs::remove_file(&old_path);
-                        field.generator = None;
-                    }
-                }
+            if group.columns.len() == 2
+                && let Some(field) = entity.fields.iter_mut().find(|f| f.name == *primary)
+                && let Some(crate::core::GeneratorSpec::Dictionary { ref file, .. }) =
+                    field.generator
+            {
+                // Remove the standalone dictionary file — tuple subsumes it
+                let old_path = output_dir.join(file);
+                let _ = std::fs::remove_file(&old_path);
+                field.generator = None;
             }
 
             // For 3+ column groups, replace existing dictionaries — the tuple
@@ -4230,14 +4312,13 @@ fn extract_tuple_dictionaries(
             // Delete orphaned dictionary files from prior extraction.
             if group.columns.len() >= 3 {
                 for col_name in &group.columns {
-                    if let Some(field) = entity.fields.iter_mut().find(|f| f.name == *col_name) {
-                        if let Some(crate::core::GeneratorSpec::Dictionary { ref file, .. }) =
+                    if let Some(field) = entity.fields.iter_mut().find(|f| f.name == *col_name)
+                        && let Some(crate::core::GeneratorSpec::Dictionary { ref file, .. }) =
                             field.generator
-                        {
-                            let old_path = output_dir.join(file);
-                            let _ = std::fs::remove_file(&old_path);
-                            field.generator = None;
-                        }
+                    {
+                        let old_path = output_dir.join(file);
+                        let _ = std::fs::remove_file(&old_path);
+                        field.generator = None;
                     }
                 }
             }
@@ -4247,14 +4328,16 @@ fn extract_tuple_dictionaries(
                 .fields
                 .iter()
                 .find(|f| f.name == *primary)
-                .is_some_and(|f| matches!(
-                    f.data_type,
-                    crate::core::DataType::Date
-                        | crate::core::DataType::Datetime
-                        | crate::core::DataType::DatetimeUs
-                        | crate::core::DataType::Datetimetz
-                        | crate::core::DataType::Time
-                ));
+                .is_some_and(|f| {
+                    matches!(
+                        f.data_type,
+                        crate::core::DataType::Date
+                            | crate::core::DataType::Datetime
+                            | crate::core::DataType::DatetimeUs
+                            | crate::core::DataType::Datetimetz
+                            | crate::core::DataType::Time
+                    )
+                });
             if primary_is_date {
                 continue;
             }
@@ -4275,10 +4358,7 @@ fn extract_tuple_dictionaries(
             let mut file = std::fs::File::create(&file_path)
                 .with_context(|| format!("failed to create tuple dictionary {file_name}"))?;
             for tuple in &group.tuples {
-                let escaped: Vec<String> = tuple
-                    .iter()
-                    .map(|v| escape_tsv_value(v))
-                    .collect();
+                let escaped: Vec<String> = tuple.iter().map(|v| escape_tsv_value(v)).collect();
                 let line = escaped.join("\t");
                 writeln!(file, "{line}")?;
             }
@@ -4352,7 +4432,13 @@ fn extract_tuple_dictionaries(
 /// Sanitize a string for use as a filename component.
 fn sanitize_filename(s: &str) -> String {
     s.chars()
-        .map(|c| if c.is_alphanumeric() || c == '_' || c == '-' { c } else { '_' })
+        .map(|c| {
+            if c.is_alphanumeric() || c == '_' || c == '-' {
+                c
+            } else {
+                '_'
+            }
+        })
         .collect()
 }
 
@@ -4428,7 +4514,6 @@ fn extract_full_row_dictionaries(
     quiet: bool,
 ) -> Result<usize> {
     use arrow::array::Array;
-    use std::collections::HashSet;
     use std::io::Write;
 
     const MAX_ROWS_FOR_FULL_ROW_DICT: usize = 7000;
@@ -4456,17 +4541,21 @@ fn extract_full_row_dictionaries(
         if total_cols < 2 {
             continue;
         }
-        let string_cols = entity.fields.iter().filter(|f| {
-            matches!(
-                f.data_type,
-                crate::core::DataType::String | crate::core::DataType::Uuid
-            ) || matches!(
-                &f.generator,
-                Some(crate::core::GeneratorSpec::OneOf { .. })
-                    | Some(crate::core::GeneratorSpec::Dictionary { .. })
-                    | Some(crate::core::GeneratorSpec::Faker { .. })
-            )
-        }).count();
+        let string_cols = entity
+            .fields
+            .iter()
+            .filter(|f| {
+                matches!(
+                    f.data_type,
+                    crate::core::DataType::String | crate::core::DataType::Uuid
+                ) || matches!(
+                    &f.generator,
+                    Some(crate::core::GeneratorSpec::OneOf { .. })
+                        | Some(crate::core::GeneratorSpec::Dictionary { .. })
+                        | Some(crate::core::GeneratorSpec::Faker { .. })
+                )
+            })
+            .count();
         if string_cols == 0 {
             continue;
         }
@@ -4484,7 +4573,10 @@ fn extract_full_row_dictionaries(
 
         // Skip string ratio check for small schemas or small tables
         let is_small_table = total_rows <= SMALL_TABLE_ALWAYS_THRESHOLD;
-        if total_cols > SMALL_SCHEMA_THRESHOLD && string_ratio < MIN_STRING_COLUMN_RATIO && !is_small_table {
+        if total_cols > SMALL_SCHEMA_THRESHOLD
+            && string_ratio < MIN_STRING_COLUMN_RATIO
+            && !is_small_table
+        {
             continue;
         }
 
@@ -4503,7 +4595,10 @@ fn extract_full_row_dictionaries(
                 for col_name in &field_names {
                     let col_idx = match batch.schema().index_of(col_name) {
                         Ok(idx) => idx,
-                        Err(_) => { valid = false; break; }
+                        Err(_) => {
+                            valid = false;
+                            break;
+                        }
                     };
                     let col = batch.column(col_idx);
                     if col.is_null(row_idx) {
@@ -4528,15 +4623,15 @@ fn extract_full_row_dictionaries(
 
         // Remove any existing tuple dict or dictionary files for this entity's columns
         // since the full-row dictionary supersedes them.
-        let old_files: Vec<String> = entity.fields.iter().filter_map(|f| {
-            match &f.generator {
+        let old_files: Vec<String> = entity
+            .fields
+            .iter()
+            .filter_map(|f| match &f.generator {
                 Some(crate::core::GeneratorSpec::Dictionary { file, .. })
-                | Some(crate::core::GeneratorSpec::TupleLookup { file, .. }) => {
-                    Some(file.clone())
-                }
+                | Some(crate::core::GeneratorSpec::TupleLookup { file, .. }) => Some(file.clone()),
                 _ => None,
-            }
-        }).collect();
+            })
+            .collect();
         for old_file in &old_files {
             let old_path = output_dir.join(old_file);
             let _ = std::fs::remove_file(&old_path);
@@ -4552,10 +4647,7 @@ fn extract_full_row_dictionaries(
         }
 
         // Write full-row TSV file (columns in field order)
-        let file_name = format!(
-            "{}__fullrow.tsv",
-            sanitize_filename(&entity.name),
-        );
+        let file_name = format!("{}__fullrow.tsv", sanitize_filename(&entity.name),);
         let file_path = output_dir.join(&file_name);
         let mut file = std::fs::File::create(&file_path)
             .with_context(|| format!("failed to create full-row dictionary {file_name}"))?;
@@ -4591,15 +4683,15 @@ fn extract_full_row_dictionaries(
                 return true; // keep non-conditional or other-entity correlations
             }
             // Drop if the dependent field is one of our full-row dict columns
-            if let Some(dep) = &corr.dependent {
-                if field_names.contains(dep) {
-                    tracing::debug!(
-                        entity = %entity.name,
-                        dependent = %dep,
-                        "removing conditional_distribution override (superseded by full-row dictionary)"
-                    );
-                    return false;
-                }
+            if let Some(dep) = &corr.dependent
+                && field_names.contains(dep)
+            {
+                tracing::debug!(
+                    entity = %entity.name,
+                    dependent = %dep,
+                    "removing conditional_distribution override (superseded by full-row dictionary)"
+                );
+                return false;
             }
             true
         });
@@ -4607,7 +4699,7 @@ fn extract_full_row_dictionaries(
         count += 1;
         if !quiet {
             eprintln!(
-                "  {} full-row dictionary: {} ({} unique rows, {} columns)",
+                "  {} full-row dictionary: {} ({} rows, {} columns)",
                 "📦".dimmed(),
                 entity.name,
                 all_rows.len(),
@@ -4616,7 +4708,7 @@ fn extract_full_row_dictionaries(
         }
         tracing::info!(
             entity = %entity.name,
-            all_rows = all_rows.len(),
+            rows = all_rows.len(),
             columns = field_names.len(),
             "extracted full-row dictionary"
         );
@@ -4668,9 +4760,9 @@ fn extract_dictionaries_from_state(
                 }
                 Some(crate::core::GeneratorSpec::OneOf { choices }) => {
                     choices.len() == 200
-                        && choices.iter().all(|c| {
-                            matches!(c.value, crate::core::Value::String(_))
-                        })
+                        && choices
+                            .iter()
+                            .all(|c| matches!(c.value, crate::core::Value::String(_)))
                 }
                 _ => false,
             };
@@ -4700,10 +4792,10 @@ fn extract_dictionaries_from_state(
 
             // For OneOf generators at the 200-choice cap, only extract if the estimated
             // cardinality exceeds the OneOf size (confirming truncation).
-            if let Some(crate::core::GeneratorSpec::OneOf { choices }) = &field.generator {
-                if estimated_cardinality <= choices.len() {
-                    continue;
-                }
+            if let Some(crate::core::GeneratorSpec::OneOf { choices }) = &field.generator
+                && estimated_cardinality <= choices.len()
+            {
+                continue;
             }
 
             // Normalize: trim whitespace and skip empty strings (matches batch behavior)
@@ -5363,13 +5455,11 @@ mod tests {
             content.contains("\"entities\""),
             "should have entities section"
         );
-        assert!(
-            content.contains("\"fields\""),
-            "should have fields"
-        );
+        assert!(content.contains("\"fields\""), "should have fields");
 
         // Verify the output is valid JSON
-        let parsed: serde_json::Value = serde_json::from_str(&content).expect("output should be valid JSON");
+        let parsed: serde_json::Value =
+            serde_json::from_str(&content).expect("output should be valid JSON");
         assert!(parsed.get("model").is_some());
         assert!(parsed.get("entities").is_some());
     }
@@ -6141,7 +6231,11 @@ mod tests {
         use arrow::datatypes::{Field, Schema};
         use std::sync::Arc;
 
-        let schema = Arc::new(Schema::new(vec![Field::new("val", DataType::Float64, false)]));
+        let schema = Arc::new(Schema::new(vec![Field::new(
+            "val",
+            DataType::Float64,
+            false,
+        )]));
         let batch = RecordBatch::try_new(
             schema,
             vec![Arc::new(Float64Array::from(vec![9.0, 7.5, 3.2, 1.0]))],
@@ -6185,11 +6279,8 @@ mod tests {
         use std::sync::Arc;
 
         let schema = Arc::new(Schema::new(vec![Field::new("x", DataType::Int64, false)]));
-        let batch = RecordBatch::try_new(
-            schema,
-            vec![Arc::new(Int64Array::from(vec![1, 2]))],
-        )
-        .unwrap();
+        let batch =
+            RecordBatch::try_new(schema, vec![Arc::new(Int64Array::from(vec![1, 2]))]).unwrap();
 
         let cols = vec![ColumnAnalysis::new("x".to_string(), 0.0, 1.0)];
         let result = super::detect_sort_order(&batch, &cols);
@@ -6202,9 +6293,11 @@ mod tests {
         use arrow::datatypes::{Field, Schema};
         use std::sync::Arc;
 
-        let schema = Arc::new(Schema::new(vec![
-            Field::new("price", DataType::Float64, false),
-        ]));
+        let schema = Arc::new(Schema::new(vec![Field::new(
+            "price",
+            DataType::Float64,
+            false,
+        )]));
         let batch = RecordBatch::try_new(
             schema,
             vec![Arc::new(Float64Array::from(vec![10.0, 20.0, 30.0, 50.0]))],
@@ -6215,8 +6308,13 @@ mod tests {
         col.categorical_weights = Some(vec![("10".into(), 0.25)]);
         let constraints = super::detect_column_constraints(&batch, &[col]);
 
-        let range = constraints.iter().find(|c| matches!(c, crate::core::Constraint::Range { field, .. } if field == "price"));
-        assert!(range.is_some(), "should detect range constraint for numeric column");
+        let range = constraints.iter().find(
+            |c| matches!(c, crate::core::Constraint::Range { field, .. } if field == "price"),
+        );
+        assert!(
+            range.is_some(),
+            "should detect range constraint for numeric column"
+        );
         if let Some(crate::core::Constraint::Range { min, max, .. }) = range {
             assert_eq!(*min, Some(crate::core::Value::Float(10.0)));
             assert_eq!(*max, Some(crate::core::Value::Float(50.0)));
@@ -6249,10 +6347,13 @@ mod tests {
 
         let constraints = super::detect_column_constraints(&batch, &[col_low, col_high]);
 
-        let check = constraints.iter().find(|c| {
-            matches!(c, crate::core::Constraint::Check { expr } if expr.contains("<="))
-        });
-        assert!(check.is_some(), "should detect ordering constraint low <= high");
+        let check = constraints
+            .iter()
+            .find(|c| matches!(c, crate::core::Constraint::Check { expr } if expr.contains("<=")));
+        assert!(
+            check.is_some(),
+            "should detect ordering constraint low <= high"
+        );
     }
 
     #[test]
@@ -6281,9 +6382,12 @@ mod tests {
 
         let constraints = super::detect_column_constraints(&batch, &[col_a, col_b]);
 
-        let check = constraints.iter().find(|c| {
-            matches!(c, crate::core::Constraint::Check { expr } if expr.contains("<="))
-        });
-        assert!(check.is_none(), "unrelated columns should not produce ordering constraint");
+        let check = constraints
+            .iter()
+            .find(|c| matches!(c, crate::core::Constraint::Check { expr } if expr.contains("<=")));
+        assert!(
+            check.is_none(),
+            "unrelated columns should not produce ordering constraint"
+        );
     }
 }

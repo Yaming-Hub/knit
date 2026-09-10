@@ -395,7 +395,11 @@ mod tests {
 
         let mut rng = StdRng::seed_from_u64(42);
         let result = TemporalSpikeInjector::new()
-            .perturb(batch, &mut rng, &PerturbConfig::default().with_probability(1.0))
+            .perturb(
+                batch,
+                &mut rng,
+                &PerturbConfig::default().with_probability(1.0),
+            )
             .unwrap();
 
         let counts = result
@@ -410,7 +414,12 @@ mod tests {
             .unwrap();
 
         assert_eq!(counts.values(), &[1, 2, 3]);
-        assert_eq!((0..labels.len()).map(|i| labels.value(i)).collect::<Vec<_>>(), vec!["a", "b", "c"]);
+        assert_eq!(
+            (0..labels.len())
+                .map(|i| labels.value(i))
+                .collect::<Vec<_>>(),
+            vec!["a", "b", "c"]
+        );
     }
 
     #[test]
